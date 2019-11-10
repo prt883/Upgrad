@@ -1,9 +1,11 @@
 package com.upgrad.quora.api.controller;
 
 
-import com.upgrad.quora.api.model.*;
+import com.upgrad.quora.api.model.AnswerDeleteResponse;
+import com.upgrad.quora.api.model.AnswerEditRequest;
+import com.upgrad.quora.api.model.AnswerRequest;
+import com.upgrad.quora.api.model.AnswerResponse;
 import com.upgrad.quora.service.business.AnswerBusinessService;
-import com.upgrad.quora.service.entity.AnswerEntity;
 import com.upgrad.quora.service.exception.AnswerNotFoundException;
 import com.upgrad.quora.service.exception.AuthorizationFailedException;
 import com.upgrad.quora.service.exception.InvalidQuestionException;
@@ -12,9 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 public class AnswerController {
@@ -41,6 +40,16 @@ public class AnswerController {
 
         AnswerResponse answerResponse=new AnswerResponse().id(uuid).status("ANSWER EDITED");
         return new ResponseEntity<AnswerResponse>(answerResponse, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, path = "/answer/delete/{answerId}",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<AnswerDeleteResponse> deleteAnswerByAnswerId(@PathVariable("answerId") String answerId, @RequestHeader("authorization") final String authorization) throws AnswerNotFoundException, AuthorizationFailedException {
+
+        String accessToken = authorization.startsWith("Bearer ")?authorization.split("Bearer ")[1]:authorization;
+        String uuid=answerBusinessService.deleteAnswer(answerId,accessToken);
+
+        AnswerDeleteResponse answerDeleteResponse=new AnswerDeleteResponse().id(uuid).status("ANSWER DELETED");
+        return new ResponseEntity<AnswerDeleteResponse>(answerDeleteResponse, HttpStatus.OK);
     }
 
 }
