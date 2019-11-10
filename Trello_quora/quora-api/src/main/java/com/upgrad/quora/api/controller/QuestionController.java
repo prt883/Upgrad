@@ -23,6 +23,7 @@ public class QuestionController {
     @Autowired
     private QuestionBusinessService questionBusinessService;
 
+    //Question post
     @RequestMapping(method = RequestMethod.POST, path = "/create", consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<QuestionResponse> userDetails1(final QuestionRequest questionRequest, @RequestHeader("authorization") final String authorization) throws AuthorizationFailedException {
 
