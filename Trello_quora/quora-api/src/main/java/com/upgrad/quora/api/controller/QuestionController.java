@@ -1,20 +1,17 @@
 package com.upgrad.quora.api.controller;
 
 
-import com.upgrad.quora.api.model.QuestionDetailsResponse;
-import com.upgrad.quora.api.model.QuestionRequest;
-import com.upgrad.quora.api.model.QuestionResponse;
+import com.upgrad.quora.api.model.*;
 import com.upgrad.quora.service.business.QuestionBusinessService;
 import com.upgrad.quora.service.entity.QuestionEntity;
 import com.upgrad.quora.service.exception.AuthorizationFailedException;
+import com.upgrad.quora.service.exception.InvalidQuestionException;
+import com.upgrad.quora.service.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,5 +52,38 @@ public class QuestionController {
         return new ResponseEntity<List<QuestionDetailsResponse>>(questionDetailsResponses, HttpStatus.OK);
     }
 
-    
+    @RequestMapping(method = RequestMethod.PUT, path = "/edit/{questionId}",consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<QuestionEditResponse> editByQuestionId(@PathVariable("questionId") String questionId, final QuestionRequest questionRequest, @RequestHeader("authorization") final String authorization) throws InvalidQuestionException, AuthorizationFailedException {
+
+        String accessToken = authorization.startsWith("Bearer ")?authorization.split("Bearer ")[1]:authorization;
+        String uuid=questionBusinessService.updateQuestion(questionId,questionRequest.getContent(),accessToken);
+
+        QuestionEditResponse questionEditResponse=new QuestionEditResponse().id(uuid).status("QUESTION EDITED");
+        return new ResponseEntity<QuestionEditResponse>(questionEditResponse, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, path = "/delete/{questionId}",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<QuestionDeleteResponse> deleteQuestionByQuestionId(@PathVariable("questionId") String questionId, @RequestHeader("authorization") final String authorization) throws InvalidQuestionException, AuthorizationFailedException {
+
+        String accessToken = authorization.startsWith("Bearer ")?authorization.split("Bearer ")[1]:authorization;
+        String uuid=questionBusinessService.deleteQuestion(questionId,accessToken);
+
+        QuestionDeleteResponse questionDeleteResponse=new QuestionDeleteResponse().id(uuid).status("QUESTION DELETED");
+        return new ResponseEntity<QuestionDeleteResponse>(questionDeleteResponse, HttpStatus.OK);
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path = "/all/{userId}",produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<List<QuestionDetailsResponse>> getQuestionsByuserId(@PathVariable("userId") String userId, @RequestHeader("authorization") final String authorization) throws UserNotFoundException, AuthorizationFailedException {
+
+        String accessToken = authorization.startsWith("Bearer ")?authorization.split("Bearer ")[1]:authorization;
+        List<QuestionEntity> allQuestions = questionBusinessService.getAllQuestionsByUserId(userId,accessToken);
+        List<QuestionDetailsResponse> questionDetailsResponses = new ArrayList<>();
+        for (QuestionEntity question : allQuestions) {
+            QuestionDetailsResponse qResponse = new QuestionDetailsResponse();
+            qResponse.setId(question.getUuid());
+            qResponse.setContent(question.getContent());
+            questionDetailsResponses.add(qResponse);
+        }
+        return new ResponseEntity<List<QuestionDetailsResponse>>(questionDetailsResponses, HttpStatus.OK);
+    }
 }
